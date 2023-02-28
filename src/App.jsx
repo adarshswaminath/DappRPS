@@ -1,49 +1,90 @@
-import { ConnectWallet } from "@thirdweb-dev/react";
-import "./styles/Home.css";
+import { ConnectWallet, useContract, useContractWrite, useAddress, Web3Button } from '@thirdweb-dev/react';
+import { useState } from 'react'
+import './styles/style.css'
 
-export default function Home() {
+function App() {
+  const [value, setValue] = useState("");
+  const [randValue, setRandValue] = useState("");
+  const [score, setScore] = useState(0);
+  const [attempts, setAttempts] = useState(0);
+  const [msg, setMsg] = useState("")
+  const [status,setStatus] = useState("")
+  const [walletConnected, setWalletConnected] = useState(false)
+
+  const address = useAddress()
+  console.log(address);
+  //   contract setup
+  const { contract, isLoading } = useContract("0x33477b6E5E279ec1D947330dc8D748f35164ADb7");
+  const { mutateAsync: Transfer } = useContractWrite(contract, "Transfer")
+  // gaming function
+  const game = (e) => {
+    let values = ["paper", "scissor", "stone"];
+    let randomNum = Math.floor(Math.random() * values.length);
+    let computerSelection = values[randomNum];
+    setRandValue(computerSelection);
+    if (computerSelection === e) {
+      setScore((prevScore) => prevScore + 1);
+    }
+    setAttempts((prevAttempts) => prevAttempts + 1);
+    if (attempts >= 4) {
+      setMsg(`You  Score is ${score}`)
+      setScore(0);
+      setAttempts(0);
+
+    }
+    if(score ==2){
+        setStatus("You won the price")
+    }
+  };
+
+  // function will called @user connect the wallet
+  const handleWalletConnect = () => {
+    setWalletConnected(true)
+  }
+
   return (
-    <div className="container">
-      <main className="main">
-        <h1 className="title">
-          Welcome to <a href="https://thirdweb.com/">thirdweb</a>!
-        </h1>
-
-        <p className="description">
-          Get started by configuring your desired network in{" "}
-          <code className="code">src/main.jsx</code>, then modify the{" "}
-          <code className="code">src/App.jsx</code> file!
-        </p>
-
-        <div className="connect">
-          <ConnectWallet />
+    <div className="App">
+      {walletConnected ? (
+        <div>
+          <div className='mt-4 text-2xl'>{msg}</div>
+      <div className="text-4xl mb-4">{randValue}</div>
+      <div className="text2xl mb-2">{score}</div>
+      <div className="text2xl mb-2">{status}</div>
+      <div className="card flex gap-3">
+        <button
+          className="btn p-2 px-4 py-3 bg-slate-400 text-2xl"
+          onClick={() => game("stone")}
+        >
+          ✊
+        </button>
+        <button
+          className="btn p-2 px-4 py-3 bg-slate-400 text-2xl"
+          onClick={() => game("paper")}
+        >
+          ✋
+        </button>
+        <button
+          className="btn p-2 px-4 py-3 bg-slate-400 text-2xl"
+          onClick={() => game("scissor")}
+        >
+          ✌️
+        </button>
+      </div>
+      <div className="flex gap-7">
+        <span>Stone</span>
+        <span>Paper</span>
+        <span>Scissor</span>
+      </div>
         </div>
-
-        <div className="grid">
-          <a href="https://portal.thirdweb.com/" className="card">
-            <h2>Portal &rarr;</h2>
-            <p>
-              Guides, references and resources that will help you build with
-              thirdweb.
-            </p>
-          </a>
-
-          <a href="https://thirdweb.com/dashboard" className="card">
-            <h2>Dashboard &rarr;</h2>
-            <p>
-              Deploy, configure and manage your smart contracts from the
-              dashboard.
-            </p>
-          </a>
-
-          <a href="https://portal.thirdweb.com/templates" className="card">
-            <h2>Templates &rarr;</h2>
-            <p>
-              Discover and clone template projects showcasing thirdweb features.
-            </p>
-          </a>
-        </div>
-      </main>
+      ): (
+        <div className='pt-4'>
+        <ConnectWallet
+          action={handleWalletConnect}
+        />
+      </div>
+      )} 
     </div>
   );
 }
+
+export default App;
