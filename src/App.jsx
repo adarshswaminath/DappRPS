@@ -1,11 +1,13 @@
-import { ConnectWallet, useContract, useContractWrite } from '@thirdweb-dev/react';
+import { useContract, useContractWrite,ConnectWallet,useAddress } from '@thirdweb-dev/react';
 import { useState } from 'react'
 import './styles/style.css'
 
 
 function App() {
-
+  let address = useAddress()
   // states
+  // disable icons 
+  const [isDisable,setIsDisable] = useState(false)
   // computer generated game value 
   const [randValue, setRandValue] = useState("");
   // score of the user
@@ -18,16 +20,25 @@ function App() {
   const [status, setStatus] = useState("")
   // check the wallet connected or not
   const [walletConnected, setWalletConnected] = useState(false)
-  // set wallet address
-  const [address, setAddress] = useState("")
+  
 
 
   //   contract setup
-  const { contract, isLoading } = useContract("0x33477b6E5E279ec1D947330dc8D748f35164ADb7");
+  const { contract } = useContract("0x33477b6E5E279ec1D947330dc8D748f35164ADb7");
   const { mutateAsync: Transfer } = useContractWrite(contract, "Transfer")
-
+  // contract call 
+  const call = async () => {
+    try {
+      const data = await Transfer([ address ]);
+      console.info("contract call successs", data);
+    } catch (err) {
+      console.error("contract call failure", err);
+    }
+  }
+  // function for waiting 
+  const delay = ms => new Promise(res => setTimeout(res,ms))
   // gaming function for the @user
-  const Playgame = (e) => {
+  const Playgame = async(e) => {
     let values = ["paper", "scissor", "stone"];
     let randomNum = Math.floor(Math.random() * values.length);
     let computerSelection = values[randomNum];
@@ -37,13 +48,19 @@ function App() {
     }
     setAttempts((prevAttempts) => prevAttempts + 1);
     if (attempts >= 4) {
-      setMsg(`You  Score is ${score}`)
+      setMsg(`You Failed Try Again`)
       setScore(0);
       setAttempts(0);
+      window.location.reload()
 
     }
-    if (score == 2) {
-      setStatus("You won the price")
+    if (score == 1) {
+      // disable click buttons
+      setIsDisable(current => !current)
+      setMsg(`Your Score ${score} \n You Win Price 🎉`)
+      call()
+      await delay(5000)
+      setMsg("Just A minute You will\n recieve your Price")
     }
   };
 
@@ -52,26 +69,15 @@ function App() {
     setWalletConnected(true)
   }
 
-  const ConnectWallet = async () => {
-    // const {ethereum} = window;
-    if (!ethereum) {
-      alert("Install Metamask Please")
-    }
-    const accounts = await window.ethereum.request({
-      method: "eth_requestAccounts"
-    })
-    setAddress(accounts[0])
-    handleWalletConnect()
-  }
+ 
 
 
   return (
     <div className="App">
-      {walletConnected ? (
         <div>
           <div className="navbar flex justify-between p-4">
-            <h2 className="text-2xl">Logo</h2>
-            <button className='px-4 py-3 bg-pink-600'>{address.slice(0,4)}...{address.slice(38,42)}</button>
+            {/* <NFT/> */}
+            <ConnectWallet className='px-4 py-2'/>
           </div>
           {/* body of the game */}
           <div className="h-screen flex items-center justify-center">
@@ -84,7 +90,11 @@ function App() {
               <div className="text2xl mb-2">{score}</div>
             </div>
 
-            <div className="grid">
+            <div className="grid" 
+              style={{
+                opacity : isDisable ? 0 : ""
+              }}
+            >
               <div className="card flex gap-3">
                 <button
                   className="btn p-2 px-4 py-3 bg-slate-400 text-2xl"
@@ -114,12 +124,7 @@ function App() {
            </div>
           </div>
         </div>
-      ) : (
-        <div className='pt-4 h-screen flex items-center justify-center'>
-          {/* button to connect wallet */}
-          <button onClick={ConnectWallet} className='px-4 py-3'>Connect</button>
-        </div>
-      )}
+    
     </div>
   );
 }
