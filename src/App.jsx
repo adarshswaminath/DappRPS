@@ -1,6 +1,7 @@
 import { useContract, useContractWrite,ConnectWallet,useAddress } from '@thirdweb-dev/react';
-import { useState } from 'react'
+import { useState,useEffect } from 'react'
 import './styles/style.css'
+import Swal from "sweetalert"
 
 
 function App() {
@@ -54,6 +55,7 @@ function App() {
       window.location.reload()
 
     }
+    // setting difficulty
     if (score == 1) {
       // disable click buttons
       setIsDisable(current => !current)
@@ -69,7 +71,12 @@ function App() {
     setWalletConnected(true)
   }
 
- 
+  useEffect(() => {
+    Swal(
+      "Hello User",
+      "✋ Welcome to DappRPS \n✋ You can earn GoerliETH By Playing Stone Paper Scissor Game \n ✋ First You should connect your wallet \n ✋ This game have difficulty 3/3 \n ✋ To win price you should have 5 points then automaticaly ETH will Transfer to your account"
+    )
+  },[])
 
 
   return (
